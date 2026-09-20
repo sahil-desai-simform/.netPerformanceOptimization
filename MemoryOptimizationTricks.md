@@ -269,7 +269,7 @@ LOH churn and the double-buffer on `ToArray`.
   **Never add or remove while holding one**; the backing array may be replaced and it dangles.
 - **`FrozenDictionary` / `FrozenSet`** `[.NET 8]` for read-only maps built once at startup — lookup
   is never worse, construction is paid once. But
-  [Step 3 measured no advantage at all](ParallelismVsConcurrency.md#73-frozendictionary-net-8) on the
+  [Step 3 measured no advantage at all](ParallelismVsConcurrency.md#frozendictionary-showed-no-advantage) on the
   shape tested. Verify on your keys.
 - **Source-generate JSON** (`[JsonSerializable]` + `JsonSerializerContext`) — no reflection,
   trimmable, AOT-safe. On the hot path, `Utf8JsonWriter` with `"id"u8` literals, and `Utf8JsonReader`
@@ -406,7 +406,7 @@ gen0 allocator is very good. Most code should allocate freely and be readable.
 |---|---|
 | `ArrayPool` is **10% slower than `new byte[128]`** | "Pooling is always a win" |
 | `SearchValues` showed **no advantage** over `IndexOfAny` at 3 delimiters | "Always use `SearchValues`" |
-| `FrozenDictionary` showed **no advantage** in [Step 3's measurement](ParallelismVsConcurrency.md#73-frozendictionary-net-8) | "Freeze every startup map" |
+| `FrozenDictionary` showed **no advantage** in [Step 3's measurement](ParallelismVsConcurrency.md#frozendictionary-showed-no-advantage) | "Freeze every startup map" |
 | `static` lambdas showed **no time difference** | "Static lambdas are faster" — they're safer |
 | A hand-written loop **lost** to `Enumerable.Count(predicate)` | "Rewrite LINQ out of hot code" |
 | `string.Create` allocated less and ran **slower**, twice | "Fewer allocations means faster" |
