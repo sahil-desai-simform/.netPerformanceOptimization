@@ -1,0 +1,47 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>PerfLab</RootNamespace>
+
+    <!-- Multi-targeted so the cross-runtime job matrices (Step1.RuntimeComparison,
+         Step4.StackAllocationPatterns) can build and run on all three runtimes.
+         See README for the exact command lines. -->
+    <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
+
+    <!-- BenchmarkDotNet refuses Debug builds, and it should. Make Release the default
+         so a bare `dotnet run` cannot produce meaningless numbers. -->
+    <Configuration Condition="'$(Configuration)' == ''">Release</Configuration>
+    <Optimize Condition="'$(Configuration)' == 'Release'">true</Optimize>
+
+    <!-- Explicit, so the GC mode is visible rather than inherited. Per-job GC settings
+         ([GcServer]) override this for the benchmark processes BenchmarkDotNet spawns. -->
+    <ServerGarbageCollection>false</ServerGarbageCollection>
+    <ConcurrentGarbageCollection>false</ConcurrentGarbageCollection>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" Version="0.15.8" />
+    <!-- TensorPrimitives ships out-of-band, not in the shared framework (Step 4 §12). -->
+    <PackageReference Include="System.Numerics.Tensors" Version="10.0.12" />
+  </ItemGroup>
+
+  <!-- ── The API lab is net10.0-only ──────────────────────────────────────────────────────
+       A plain console SDK plus a conditional FrameworkReference gives us the ASP.NET Core
+       host on net10.0 and a lean console app on net8.0/net9.0 — without sprinkling #if
+       through the shared benchmark code. -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.18.0" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.18.0" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.Http" Version="1.18.0" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.Runtime" Version="1.18.0" />
+    <!-- The Prometheus exporter has never shipped a stable release; beta is the normal choice. -->
+    <PackageReference Include="OpenTelemetry.Exporter.Prometheus.AspNetCore" Version="1.18.0-beta.1" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' != 'net10.0'">
+    <Compile Remove="Api/**" />
+  </ItemGroup>
+
+</Project>

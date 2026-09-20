@@ -1,0 +1,37 @@
+## Build output
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+artifacts/
+
+## BenchmarkDotNet
+## The logs, .csv and .html are noise — but the github-markdown reports are the
+## provenance for every number quoted in the docs, so they ship.
+BenchmarkDotNet.Artifacts/
+!samples/PerfLab/BenchmarkDotNet.Artifacts/
+samples/PerfLab/BenchmarkDotNet.Artifacts/*.log
+!samples/PerfLab/BenchmarkDotNet.Artifacts/results/
+samples/PerfLab/BenchmarkDotNet.Artifacts/results/*
+!samples/PerfLab/BenchmarkDotNet.Artifacts/results/*-report-github.md
+
+## Diagnostics captures — these are large and often contain production data.
+## Never commit them; a .gcdump has no field values but a full dump does.
+*.nettrace
+*.speedscope.json
+*.gcdump
+*.etl
+*.etlx
+core_*
+dump_*
+*.dmp
+
+## IDE
+.vs/
+.idea/
+*.user
+*.suo
+
+## Tooling
+*.nupkg
+.dotnet/
