@@ -180,7 +180,7 @@ The allocations you didn't write. None of these *look* like allocations, which i
 | `yield return` | State machine object | Return a collection or span |
 | `Tuple<T1,T2>` | Class | `ValueTuple` — `(a, b)` |
 | `new EventHandler(M)` in a loop | Delegate per call | Cache it |
-| `async` state machine on suspension | Box | [Step 2 — where async allocations come from](AsyncVsSync.md#11-where-async-allocations-come-from) |
+| `async` state machine on suspension | Box | [Step 2 — where async allocations come from](AsyncVsSync.md#9-where-async-allocations-come-from) |
 
 Measured as pairs — the idiomatic version against its allocation-free equivalent:
 
