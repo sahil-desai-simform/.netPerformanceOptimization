@@ -21,9 +21,11 @@ or isn't the database before going looking.
 | 3 | **[Parallelism vs Concurrency](ParallelismVsConcurrency.md)** | What's the difference, which do I need, and what does each one cost me? |
 | 4 | **[Memory Optimization Tricks](MemoryOptimizationTricks.md)** | Spans, pooling, and allocation-free code — and when the complexity is worth it. |
 
-Read them in order. Step 1 is the foundation: every claim in Steps 2–4 is something you should be
-able to verify with the tools it introduces, and each later document points back at the specific
-measurement that proves its technique worked.
+**Every document is the same shape:** the rules, a symptom→fix table, do-this-not-that pairs with
+the measurement that justifies each one, and a checklist you can paste into a PR template.
+
+Read Step 1 first — it's the foundation, and every claim in Steps 2–4 is something you should be able
+to verify with the tools it introduces. Steps 2, 3 and 4 are independent of each other.
 
 ## Companion code
 
@@ -55,10 +57,10 @@ the `[.NET 11]` runtime-async section (cited from published sources — this mac
 the concurrent load-test outcomes (no load generator installed; the endpoints are verified to run,
 the throughput behaviour is described rather than observed).
 
-Where a measurement contradicted the expected story, the measurement was kept and the prose
-rewritten — which happened often enough to be worth stating:
+Where a measurement contradicted the expected story, the measurement was kept and the advice follows
+it — which happened often enough to be worth stating:
 
-- Step 1's lowest-allocation CSV formatter turned out to be **47% slower** — and Step 4's "obvious
+- Step 1's lowest-allocation CSV formatter turned out to be **52% slower** — and Step 4's "obvious
   fix" for it **failed**, which turned out to be the more useful finding.
 - Step 2's `ValueTask` is 2× faster and allocates 99% less at 100% synchronous completion — and is
   **slower, allocating more**, at 0%.

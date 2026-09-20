@@ -12,7 +12,7 @@ samples/
     ├── Program.cs              dispatcher: "api" | "bench"
     ├── Api/                    ASP.NET Core lab — net10.0 only (see below)
     │   ├── ApiHost.cs          host + OpenTelemetry wiring
-    │   ├── AppMetrics.cs       custom Meter (Step 1 §9.4)
+    │   ├── AppMetrics.cs       custom Meter (Step 1 §8.1)
     │   └── Step1..4Endpoints.cs
     └── Benchmarks/
         └── Step1/ Step2/ Step3/ Step4/
@@ -83,7 +83,7 @@ dotnet run -c Release -f net10.0 -- bench --filter '*' --job short
 # Statistical verdict (Faster/Slower/Same) — what CI should gate on
 dotnet run -c Release -f net10.0 -- bench --filter '*CsvFormatting*' --statisticalTest 5%
 
-# Did the allocation actually disappear? (Step 1 §9.1, Step 4 §13.3)
+# Did the allocation actually disappear?  (Step 1 §9.1 / Step 4 "What .NET 10 does for free")
 dotnet run -c Release -f net10.0 -- bench --filter '*StackAllocationPatterns*' --disasm
 #   → a stack-allocated shape has NO CORINFO_HELP_NEWSFAST / NEWARR_1_VC call
 
@@ -114,7 +114,7 @@ dotnet run -c Release -f net10.0 --project samples/PerfLab -- api
 > The project pins **Workstation GC** because the benchmarks share its runtimeconfig, while
 > ASP.NET Core would normally default to Server GC. The app prints a warning at startup and `GET /`
 > always reports the mode actually in effect. For production-representative memory behaviour
-> (and to see DATAS at work — Step 1 §7.2):
+> (and to see DATAS at work — [Step 1 §7.2](../WaysToMeasure.md#72-gc-modes--what-youre-actually-running)):
 >
 > ```powershell
 > $env:DOTNET_gcServer=1; dotnet run -c Release -f net10.0 -- api
@@ -133,8 +133,8 @@ tell them apart is the skill Step 1 is really teaching.
 | `/step1/block` | **Queue climbs while CPU stays low** | Thread-pool starvation |
 | `/step1/contend` | `monitor-lock-contention-count` spikes | Lock contention |
 | `/step2/*` | sync vs async vs sync-over-async | Step 2's whole argument, under load |
-| `/step3/*` | parallel-in-request vs sequential | Step 3 §8 — measure at `-c 1` **and** `-c 100` |
-| `/step4/*` | naive vs pooled, same output | Step 4 §14 — does `alloc-rate` drop, and does p99 care? |
+| `/step3/*` | parallel-in-request vs sequential | [Step 3 — the ASP.NET Core reality](../ParallelismVsConcurrency.md#7-the-aspnet-core-reality): measure at `-c 1` **and** `-c 100` |
+| `/step4/*` | naive vs pooled, same output | [Step 4 — proving it](../MemoryOptimizationTricks.md#8-proving-it-and-when-not-to-bother): does `alloc-rate` drop, and does p99 care? |
 
 ### The three load tests worth running
 
@@ -161,7 +161,7 @@ dotnet-counters monitor -p <pid> --refresh-interval 1 \
   System.Runtime Microsoft.AspNetCore.Hosting PerfLab.Api
 ```
 
-**1. Async scales; sync doesn't** (Step 2 §13) — identical per-request latency in isolation:
+**1. Async scales; sync doesn't** ([Step 2 — measuring async](../AsyncVsSync.md#11-measuring-async)) — identical per-request latency in isolation:
 
 ```bash
 bombardier -c 200 -d 30s "http://localhost:5199/step2/async-io?ms=200"
@@ -170,7 +170,7 @@ bombardier -c 200 -d 30s "http://localhost:5199/step2/sync-io?ms=200"
 
 Watch `threadpool-queue-length` climb while `cpu-usage` stays near idle on the sync run.
 
-**2. Parallelism inside a request is a trade, not a win** (Step 3 §8) — run each twice:
+**2. Parallelism inside a request is a trade, not a win** ([Step 3](../ParallelismVsConcurrency.md#7-the-aspnet-core-reality)) — run each twice:
 
 ```bash
 bombardier -c 1   -d 20s "http://localhost:5199/step3/parallel-in-request?items=2000"
@@ -182,7 +182,7 @@ bombardier -c 100 -d 30s "http://localhost:5199/step3/sequential-in-request?item
 #   → sequential usually wins on throughput
 ```
 
-**3. Fewer allocations ≠ better p99** (Step 4 §14):
+**3. Fewer allocations ≠ better p99** ([Step 4](../MemoryOptimizationTricks.md#8-proving-it-and-when-not-to-bother)):
 
 ```bash
 curl "http://localhost:5199/step4/alloc-report?rows=500"     # bytes per call, side by side
@@ -221,8 +221,8 @@ dotnet-counters monitor -p <pid> PerfLab.Api
   reasons unrelated to this repo. Every package used here is public.
 - `ValidateScopes` / `ValidateOnBuild` are on unconditionally in the API, to catch a
   scoped-service-captured-by-a-singleton at startup — the most common ASP.NET Core leak
-  (Step 1 §7.4). They default to on in Development only.
-- `System.Numerics.Tensors` is referenced for `TensorPrimitives` (Step 4 §12); it ships
+  ([Step 1 §7.4](../WaysToMeasure.md#74-detecting-a-leak)). They default to on in Development only.
+- `System.Numerics.Tensors` is referenced for `TensorPrimitives` ([Step 4 — SIMD](../MemoryOptimizationTricks.md#6-simd)); it ships
   out-of-band rather than in the shared framework.
 - `OpenTelemetry.Exporter.Prometheus.AspNetCore` is at a `-beta` version because it has never
   shipped a stable release. Every other package is stable.
