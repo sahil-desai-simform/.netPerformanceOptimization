@@ -1,7 +1,7 @@
 # Step 3 — Parallel vs Concurrent Code in .NET
 
 > **Baseline:** .NET 10. `[.NET 9]` marks `System.Threading.Lock` and `Task.WhenEach`.
-> **Before this:** [Step 1 — thread-pool health](WaysToMeasure.md#24-thread-pool-health), and
+> **Before this:** [Step 1 — thread-pool health](WaysToMeasure.md#thread-pool-health), and
 > [Step 2](AsyncVsSync.md), whose unbounded fan-out problem this document answers.
 > **Companion code:** [samples/PerfLab/Benchmarks/Step3/](samples/PerfLab/Benchmarks/Step3/), [samples/PerfLab/Api/Step3Endpoints.cs](samples/PerfLab/Api/Step3Endpoints.cs).
 > **All numbers here are measured** on an i5-13420H (12 logical cores), .NET 10.0.4, `--job short`.
@@ -215,7 +215,7 @@ core's copy of that whole line is invalidated, and a neighbour's next write to *
 must re-fetch the line. The hardware ping-pongs one line between cores for the duration of the loop.
 
 **Nothing in the source says these threads interact.** Only the memory layout does — invisible in
-review, visible only in [cache-miss counters](WaysToMeasure.md#92-hardware-performance-counters).
+review, visible only in [cache-miss counters](WaysToMeasure.md#hardware-counters).
 
 Fixes, best first:
 
@@ -398,10 +398,10 @@ across the branches of one request, and whether that's safe depends on the servi
 |---|---|
 | Are threads contending? | `dotnet-counters` → `monitor-lock-contention-count` |
 | Which lock? | `dotnet-dump` → `!syncblk` |
-| Did my change reduce contention? | BDN [`[ThreadingDiagnoser]`](WaysToMeasure.md#44-diagnosers-worth-knowing) → "Lock Contentions" |
+| Did my change reduce contention? | BDN [`[ThreadingDiagnoser]`](WaysToMeasure.md#diagnosers) → "Lock Contentions" |
 | Are threads running or waiting? | dotTrace **Timeline**, PerfView **Thread Time** |
-| Is it false sharing? | [`[HardwareCounters(CacheMisses)]`](WaysToMeasure.md#92-hardware-performance-counters), or `perf stat -e cache-misses` |
-| Does parallelism help *the service*? | [Load test](WaysToMeasure.md#83-load-generation) at `-c 1` **and** `-c 100` |
+| Is it false sharing? | [`[HardwareCounters(CacheMisses)]`](WaysToMeasure.md#hardware-counters), or `perf stat -e cache-misses` |
+| Does parallelism help *the service*? | [Load test](WaysToMeasure.md#load-generation) at `-c 1` **and** `-c 100` |
 
 A change that improves Mean while raising the Lock Contentions column has **moved** the cost, not
 removed it.

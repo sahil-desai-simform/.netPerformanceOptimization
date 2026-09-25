@@ -7,7 +7,7 @@ LTS know what they'd gain; `[.NET 11]` items (GA Nov 2026) are forward-looking.
 
 **Scope:** CPU, memory, and thread behaviour in the application process — with an ASP.NET Core
 services bias. Query tuning and database server configuration are out of scope, though
-[Step 1 §8.4](WaysToMeasure.md#84-when-the-app-is-innocent) covers how to *prove* the bottleneck is
+[Step 1](WaysToMeasure.md#is-the-app-even-the-problem) covers how to *prove* the bottleneck is
 or isn't the database before going looking.
 
 ---

@@ -12,7 +12,7 @@ samples/
     ├── Program.cs              dispatcher: "api" | "bench"
     ├── Api/                    ASP.NET Core lab — net10.0 only (see below)
     │   ├── ApiHost.cs          host + OpenTelemetry wiring
-    │   ├── AppMetrics.cs       custom Meter (Step 1 §8.1)
+    │   ├── AppMetrics.cs       custom Meter (Step 1 — permanent instrumentation)
     │   └── Step1..4Endpoints.cs
     └── Benchmarks/
         └── Step1/ Step2/ Step3/ Step4/
@@ -83,7 +83,7 @@ dotnet run -c Release -f net10.0 -- bench --filter '*' --job short
 # Statistical verdict (Faster/Slower/Same) — what CI should gate on
 dotnet run -c Release -f net10.0 -- bench --filter '*CsvFormatting*' --statisticalTest 5%
 
-# Did the allocation actually disappear?  (Step 1 §9.1 / Step 4 "What .NET 10 does for free")
+# Did the allocation actually disappear?  (Step 1 — generated assembly / Step 4 "What .NET 10 does for free")
 dotnet run -c Release -f net10.0 -- bench --filter '*StackAllocationPatterns*' --disasm
 #   → a stack-allocated shape has NO CORINFO_HELP_NEWSFAST / NEWARR_1_VC call
 
@@ -114,7 +114,7 @@ dotnet run -c Release -f net10.0 --project samples/PerfLab -- api
 > The project pins **Workstation GC** because the benchmarks share its runtimeconfig, while
 > ASP.NET Core would normally default to Server GC. The app prints a warning at startup and `GET /`
 > always reports the mode actually in effect. For production-representative memory behaviour
-> (and to see DATAS at work — [Step 1 §7.2](../WaysToMeasure.md#72-gc-modes--what-youre-actually-running)):
+> (and to see DATAS at work — [Step 1 — DATAS](../WaysToMeasure.md#gc-pause-time-and-datas)):
 >
 > ```powershell
 > $env:DOTNET_gcServer=1; dotnet run -c Release -f net10.0 -- api
@@ -221,7 +221,7 @@ dotnet-counters monitor -p <pid> PerfLab.Api
   reasons unrelated to this repo. Every package used here is public.
 - `ValidateScopes` / `ValidateOnBuild` are on unconditionally in the API, to catch a
   scoped-service-captured-by-a-singleton at startup — the most common ASP.NET Core leak
-  ([Step 1 §7.4](../WaysToMeasure.md#74-detecting-a-leak)). They default to on in Development only.
+  ([Step 1 — detecting a leak](../WaysToMeasure.md#its-a-leak)). They default to on in Development only.
 - `System.Numerics.Tensors` is referenced for `TensorPrimitives` ([Step 4 — SIMD](../MemoryOptimizationTricks.md#6-simd)); it ships
   out-of-band rather than in the shared framework.
 - `OpenTelemetry.Exporter.Prometheus.AspNetCore` is at a `-beta` version because it has never

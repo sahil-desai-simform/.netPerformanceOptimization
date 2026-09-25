@@ -1,7 +1,7 @@
 # Step 4 — Memory: Spans, Pooling, and No-Allocation Code
 
 > **Baseline:** .NET 10. `[.NET 8]` / `[.NET 9]` / `[C# 13]` tags mark arrivals.
-> **Before this:** [Step 1 — allocation rate vs retained set](WaysToMeasure.md#23-memory-two-independent-problems).
+> **Before this:** [Step 1 — allocation rate vs retained set](WaysToMeasure.md#two-memory-problems-with-opposite-fixes).
 > **Companion code:** [samples/PerfLab/Benchmarks/Step4/](samples/PerfLab/Benchmarks/Step4/), [samples/PerfLab/Api/Step4Endpoints.cs](samples/PerfLab/Api/Step4Endpoints.cs).
 > **All numbers here are measured** on an i5-13420H, .NET 10.0.4, `--job short`.
 > Raw output: [samples/PerfLab/BenchmarkDotNet.Artifacts/results/](samples/PerfLab/BenchmarkDotNet.Artifacts/results/).
@@ -134,7 +134,7 @@ int b = int.Parse(text.AsSpan(0, 5));     // doesn't
 ```
 
 `ISpanFormattable` / `ISpanParsable<T>` are implemented by every BCL primitive, `DateTime`,
-`TimeSpan`, `Guid`, and `decimal`. Implement them on your own types and they compose with all of it.
+`TimeSpan`, `Guid`, and `decimal`. Implement them on your own types and they compose with all of it.3-
 
 Three specifics worth knowing:
 
@@ -332,7 +332,7 @@ Four rules follow, and the second reverses advice you have probably been given:
 
 A `0 B` row tells you it happened; the disassembly tells you why (no `CORINFO_HELP_NEWSFAST` call),
 which is what you need when it stops happening after an innocuous refactor —
-[Step 1 — reading the generated assembly](WaysToMeasure.md#91-looking-at-the-generated-assembly).
+[Step 1 — reading the generated assembly](WaysToMeasure.md#reading-the-generated-assembly).
 
 ## 8. Proving it, and when not to bother
 
@@ -358,7 +358,7 @@ machinery, no flakiness, no dedicated runner.
 |---|---|
 | Bytes per operation? | BDN `[MemoryDiagnoser]` → `Allocated` |
 | Did it actually reach zero? | A `0 B` row, confirmed with `--disasm` |
-| Which call site allocates? | VS **.NET Object Allocation Tracking** ([Step 1](WaysToMeasure.md#51-visual-studio)) |
+| Which call site allocates? | VS **.NET Object Allocation Tracking** ([Step 1](WaysToMeasure.md#profilers-visual-studio-and-rider)) |
 | Rate or retention? | `gc-heap-size` floor across gen2s |
 | Did the service improve? | Load test + `alloc-rate`, `time-in-gc`, p99 |
 

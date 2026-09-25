@@ -1,7 +1,7 @@
 # Step 2 — Async vs Sync: Using Threads Well
 
 > **Baseline:** .NET 10. `[.NET 8]` / `[.NET 9]` / `[.NET 11]` tags mark arrivals.
-> **Before this:** [Step 1 — thread-pool health](WaysToMeasure.md#24-thread-pool-health).
+> **Before this:** [Step 1 — thread-pool health](WaysToMeasure.md#thread-pool-health).
 > **Companion code:** [samples/PerfLab/Benchmarks/Step2/](samples/PerfLab/Benchmarks/Step2/), [samples/PerfLab/Api/Step2Endpoints.cs](samples/PerfLab/Api/Step2Endpoints.cs).
 > **All numbers here are measured** on an i5-13420H, .NET 10.0.4, `--job short`, except the
 > `[.NET 11]` section and the load test, both flagged where they appear.
@@ -91,7 +91,7 @@ Two properties make this the signature .NET production incident:
 - **It is not self-healing.** Injection is linear in *time*; queue growth is linear in *load*. Under
   real traffic, load wins.
 - **CPU looks fine.** Every CPU-based autoscaler declines to help, and every dashboard says the
-  servers are healthy. [Step 1 tells you how to see it](WaysToMeasure.md#82-detecting-thread-pool-starvation-in-production).
+  servers are healthy. [Step 1 tells you how to see it](WaysToMeasure.md#thread-pool-health).
 
 `ThreadPool.SetMinThreads(200, 200)` genuinely helps — it removes the injection delay — and is a
 legitimate **emergency mitigation** for a blocking dependency you cannot remove today. It is not a
@@ -397,12 +397,12 @@ that.
 
 | Question | Tool |
 |---|---|
-| Is the service starving *right now*? | `dotnet-counters` → `threadpool-queue-length` high, `cpu-usage` low ([Step 1](WaysToMeasure.md#82-detecting-thread-pool-starvation-in-production)) |
+| Is the service starving *right now*? | `dotnet-counters` → `threadpool-queue-length` high, `cpu-usage` low ([Step 1](WaysToMeasure.md#thread-pool-health)) |
 | Which code is blocking? | `dotnet-stack report` twice, 5 s apart, diff. Look for `Monitor.Wait`, `Task.Result`, `Thread.Sleep` |
-| What's pending in a hung process? | [`dotnet-dump`](WaysToMeasure.md#35-dotnet-dump--sos--the-last-resort-that-always-works) → `dumpasync --stats` |
-| Where is the *waiting* (not the CPU)? | [dotTrace **Timeline**, PerfView **Thread Time**](WaysToMeasure.md#52-jetbrains-rider--dottrace--dotmemory). A CPU profile shows nothing — blocked threads emit no samples |
-| Does my async change help? | BDN [`[ThreadingDiagnoser]` + `[MemoryDiagnoser]`](WaysToMeasure.md#44-diagnosers-worth-knowing) |
-| Does it help *under load*? | [Load test](WaysToMeasure.md#83-load-generation) + counters. **Microbenchmarks cannot show scalability** |
+| What's pending in a hung process? | [`dotnet-dump`](WaysToMeasure.md#its-hung) → `dumpasync --stats` |
+| Where is the *waiting* (not the CPU)? | [dotTrace **Timeline**, PerfView **Thread Time**](WaysToMeasure.md#profilers-visual-studio-and-rider). A CPU profile shows nothing — blocked threads emit no samples |
+| Does my async change help? | BDN [`[ThreadingDiagnoser]` + `[MemoryDiagnoser]`](WaysToMeasure.md#diagnosers) |
+| Does it help *under load*? | [Load test](WaysToMeasure.md#load-generation) + counters. **Microbenchmarks cannot show scalability** |
 
 That last row is the important one. A microbenchmark runs one operation at a time, so it measures
 async's *cost* and never its *benefit*:
