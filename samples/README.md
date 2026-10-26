@@ -136,6 +136,37 @@ tell them apart is the skill Step 1 is really teaching.
 | `/step3/*` | parallel-in-request vs sequential | [Step 3 — the ASP.NET Core reality](../ParallelismVsConcurrency.md#7-the-aspnet-core-reality): measure at `-c 1` **and** `-c 100` |
 | `/step4/*` | naive vs pooled, same output | [Step 4 — proving it](../MemoryOptimizationTricks.md#8-proving-it-and-when-not-to-bother): does `alloc-rate` drop, and does p99 care? |
 
+### Leak lab — practising snapshot diffs
+
+`/step1/leak` retains plain `byte[]`, which is hard to spot in a heap diff because everything
+allocates `byte[]`. `/leaks/*` retains **named** types, each with a `-fixed` twin:
+
+| Endpoint | Leaked type | Paths to Root shows |
+|---|---|---|
+| `/leaks/event-subscriber` | `OrderNotifier` | `PriceFeed.PriceChanged` — subscribed, never unsubscribed |
+| `/leaks/report-cache` | `CustomerReport` | the static cache — key includes a timestamp, never hits |
+| `/leaks/heartbeat` | `SessionHeartbeat` | the runtime timer queue — timer never disposed |
+
+Snapshot in the Visual Studio profiler (Memory Usage) → `bombardier -n 5000 -c 10
+"http://localhost:5199/leaks/event-subscriber"` → snapshot again → sort the diff by **Count Diff**.
+Repeat against the `-fixed` URL and the count stays flat. `GET /leaks/stats` shows what each
+scenario is holding; `POST /leaks/reset` releases all but the timers.
+
+### CPU lab — finding the hot line
+
+`/step1/cpu` burns CPU in an anonymous lambda. `/cpu/*` puts real-world hotspots in **named**
+methods (`OrderChecks.*Slow`), each with a `-fixed` twin returning identical results:
+
+| Endpoint | Hot line | Slow → fixed (one request, this machine) |
+|---|---|---|
+| `/cpu/duplicate-orders` | `List.Contains` inside a loop | 18.7 → 1.5 ms |
+| `/cpu/validate-emails` | `new Regex(..., Compiled)` per email | 156 → 0.6 ms |
+| `/cpu/parse-quantities` | `int.Parse` + `catch` on invalid input | 14.7 → 0.8 ms |
+
+Visual Studio profiler (CPU Usage) → `bombardier -c 8 -d 20s
+"http://localhost:5199/cpu/duplicate-orders"` → stop → **Hot Path** → double-click the
+`OrderChecks` method to get CPU % per source line.
+
 ### The three load tests worth running
 
 Each demonstrates something a microbenchmark structurally **cannot** show.

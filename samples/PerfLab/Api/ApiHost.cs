@@ -63,6 +63,8 @@ internal static class ApiHost
                 step2 = Step2Endpoints.Catalog,
                 step3 = Step3Endpoints.Catalog,
                 step4 = Step4Endpoints.Catalog,
+                leaks = LeakLabEndpoints.Catalog,
+                cpu = CpuLabEndpoints.Catalog,
             },
         }));
 
@@ -70,6 +72,8 @@ internal static class ApiHost
         app.MapStep2Endpoints();
         app.MapStep3Endpoints();
         app.MapStep4Endpoints();
+        app.MapLeakLabEndpoints();
+        app.MapCpuLabEndpoints();
 
         app.Run();
     }

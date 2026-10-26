@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json.schemastore.org/launchsettings.json",
+  "profiles": {
+    "api": {
+      "commandName": "Project",
+      "commandLineArgs": "api",
+      "applicationUrl": "http://localhost:5199",
+      "launchBrowser": false
+    },
+    "bench (list)": {
+      "commandName": "Project",
+      "commandLineArgs": "bench --list flat"
+    },
+    "bench (filter)": {
+      "commandName": "Project",
+      "commandLineArgs": "bench --filter *CsvFormatting*"
+    }
+  }
+}
