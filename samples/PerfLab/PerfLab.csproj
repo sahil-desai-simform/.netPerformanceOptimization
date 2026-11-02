@@ -6,8 +6,10 @@
 
     <!-- Multi-targeted so the cross-runtime job matrices (Step1.RuntimeComparison,
          Step4.StackAllocationPatterns) can build and run on all three runtimes.
-         See README for the exact command lines. -->
-    <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
+         See README for the exact command lines.
+         net10.0 is listed first because Visual Studio launches the first framework by default,
+         and both the API and the benchmark host need net10.0. -->
+    <TargetFrameworks>net10.0;net8.0;net9.0</TargetFrameworks>
 
     <!-- BenchmarkDotNet refuses Debug builds, and it should. Make Release the default
          so a bare `dotnet run` cannot produce meaningless numbers. -->
